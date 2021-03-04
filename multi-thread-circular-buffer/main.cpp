@@ -1,6 +1,8 @@
 #include <iostream>
 #include <pthread.h>
+#include <unistd.h>
 #define SIZE 8
+#define p 100
 using namespace std;
 
 void *producer(void *arg);
@@ -34,16 +36,18 @@ void *producer(void *arg) {
     for(i=1; i<=SIZE; i++) {
         printf("producer data : %d\n", i);
         pthread_mutex_lock(&mutex);
-        if(count == 8) {
+        if(count == SIZE) {
             pthread_cond_wait(&buffer_has_space, &mutex);
         }
+
         in++;
-        in %= 8;
+        in %= SIZE;
         buf[in] = i;
         count++;
 
         pthread_cond_signal(&buffer_has_data);
         pthread_mutex_unlock(&mutex);
+        sleep(1);
     }
 }
 
@@ -56,7 +60,7 @@ void *customer(void *arg) {
             pthread_cond_wait(&buffer_has_data, &mutex);
         }
         out++;
-        out %= 8;
+        out %= SIZE;
         data = buf[out];
         count--;
 
